@@ -1,4 +1,4 @@
-# 📋 Coffeenator Pro 9000 — Requirements & Verification Cheat Sheet
+# 📋 Coffeenator Pro 9000 — System Requirements Summary & Traceability Index
 
 > **Status:** Draft for Curation (Not yet published to `site/`)  
 > **Hardware Reference:** [`hardware/main-board/coffeenator.kicad_sch`](../hardware/main-board/coffeenator.kicad_sch)  
@@ -21,9 +21,9 @@ REQ - <CAT> - <NN>
 
 | Code | Category Name | Scope & Focus | Document File |
 | :--- | :--- | :--- | :--- |
-| **`SAF`** | **Safety & Fail-Safe** | Galvanic isolation, thermal fuses, default-OFF states, degraded "ABS-style" fallback | [`REQ-SAF-safety.md`](./REQ-SAF-safety.md) |
+| **`SAF`** | **Safety & Fail-Safe** | Galvanic isolation, thermal fuses, default-OFF states, degraded mode fallback | [`REQ-SAF-safety.md`](./REQ-SAF-safety.md) |
 | **`HW`** | **Hardware & Electrical** | PCB footprint, power supply (`U2`, `U3`), MCU (`U1`) & OTA flash, relay stages (`K1`, `K2`), inputs (`SW1`–`SW3`) | [`REQ-HW-hardware.md`](./REQ-HW-hardware.md) |
-| **`SEN`** | **Sensors & Detection** | Boiler/hotplate temperature, water tank level, carafe presence detection | [`REQ-SEN-sensors.md`](./REQ-SEN-sensors.md) |
+| **`SEN`** | **Sensors & Detection** | Reed sensors for water tank, carafe & filter support/bucket (`SW1`–`SW3`), plus future boiler/hotplate temperature | [`REQ-SEN-sensors.md`](./REQ-SEN-sensors.md) |
 | **`FW`** | **Firmware & Controls** | Offline-first brewing, button-combo factory reset, one-off automations, FSM, OTA self-test & multi-key signature check | [`REQ-FW-firmware.md`](./REQ-FW-firmware.md) |
 | **`WL`** | **Wireless & Connectivity** | BLE provisioning, standalone BLE mode, Wi-Fi connect, server wake-up, multi-channel OTA (BLE / Wi-Fi / Product Page) | [`REQ-WL-wireless.md`](./REQ-WL-wireless.md) |
 | **`PRV`** | **Privacy & Telemetry** | Zero hidden telemetry, configurable public/private API, no PII (Machine ID / MAC only), BYOK / Dual-Key OTA ownership | [`REQ-PRV-privacy.md`](./REQ-PRV-privacy.md) |
@@ -42,7 +42,7 @@ TC - <CAT> - <NN>
  └─────────────── Fixed prefix for Test Case
 ```
 
-Each test case MUST document three mandatory artifacts:
+Each test case **must** document three mandatory artifacts:
 1. **Test Analysis (Requirement Analysis):** Evaluates *what* makes the requirement testable, identifies boundary conditions, failure modes, and observability points (test pads, serial logs, API responses).
 2. **Test Description:** Specifies the preconditions, input stimuli, step-by-step procedure, and expected pass/fail criteria.
 3. **Test Implementation:** Details the concrete hardware rig, bench equipment (multimeter, oscilloscope, dummy loads), or automated software test harness (unit test, mock HAL, integration script) used to execute the test.
@@ -66,8 +66,8 @@ Each test case MUST document three mandatory artifacts:
 | :--- | :--- | :--- | :--- |
 | **`REQ-SAF-01`** | Galvanic Isolation & Thermal Fuse Retention | Must-Have | Existing + HW |
 | **`REQ-SAF-02`** | Fail-Safe Default-OFF Heater Switching Stage | Must-Have | Existing + KiCad (`K1`, `K2`, `R8`, `R9`) |
-| **`REQ-SAF-03`** | Degraded Mode / Offline Appliance Fallback ("ABS Principle") | Must-Have | User Spec |
-| **`REQ-SAF-04`** | Sensor Fault & Dry-Boil Automatic Cutoff | Must-Have | Existing |
+| **`REQ-SAF-03`** | Degraded Mode / Offline Appliance Fallback | Must-Have | User Spec |
+| **`REQ-SAF-04`** | Hardware Interlock & Sensor Safety Cutoff (Reed Sensors & Future Temp Probes) | Must-Have | Existing + KiCad (`SW1`–`SW3`) |
 | **`REQ-SAF-05`** | Independent Maximum Brew & Keep-Warm Watchdog Timer | Must-Have | Existing |
 
 ### 🔌 Hardware & Electrical (`REQ-HW-*`)
@@ -84,9 +84,10 @@ Each test case MUST document three mandatory artifacts:
 ### 🌡️ Sensors & Detection (`REQ-SEN-*`)
 | Code | Title | Priority | Source |
 | :--- | :--- | :--- | :--- |
-| **`REQ-SEN-01`** | Boiler & Hotplate Temperature Telemetry | Must-Have | Existing |
-| **`REQ-SEN-02`** | Water Tank Level Sensing | Should-Have | Existing + KiCad (`SW_Reed`) |
-| **`REQ-SEN-03`** | Carafe Presence Detection | Should-Have | Existing + KiCad (`SW_Reed`) |
+| **`REQ-SEN-01`** | Boiler & Hotplate Temperature Telemetry *(Future Implementation — Sensors Purchased)* | Nice-to-Have | Future Upgrade |
+| **`REQ-SEN-02`** | Water Tank Level Detection (`SW_Reed`) | Should-Have | Existing + KiCad (`SW_Reed`) |
+| **`REQ-SEN-03`** | Carafe Presence Detection (`SW_Reed`) | Should-Have | Existing + KiCad (`SW_Reed`) |
+| **`REQ-SEN-04`** | Filter Support / Filter Bucket Presence & Closure Detection (`SW_Reed`) | Should-Have | User Spec + KiCad (`SW_Reed`) |
 
 ### ⚙️ Firmware & Local Operation (`REQ-FW-*`)
 | Code | Title | Priority | Source |

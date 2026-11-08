@@ -115,10 +115,10 @@
 - **Priority:** Must-Have
 - **Status:** In-Progress (Implemented in Schematic `coffeenator.kicad_sch`)
 - **Description:**  
-  The mainboard shall provide three hardware-debounced and EMI-filtered switch/reed sensor input channels (`SW1`, `SW2`, `SW3`) so that physical button presses, water tank reed floats, or carafe presence switches produce clean logic transitions immune to AC relay switching noise.
+  The mainboard shall provide three hardware-debounced and EMI-filtered reed sensor / switch input channels (`SW1`, `SW2`, `SW3` on `coffeenator.kicad_sch`) to interface with the water tank level reed sensor (`REQ-SEN-02`), carafe presence reed sensor (`REQ-SEN-03`), and filter support/bucket reed sensor (`REQ-SEN-04`) (as well as physical button input combinations) so that all transitions are clean and immune to AC relay switching noise.
 - **Acceptance Criteria:**
   1. Each input channel (`SW1`, `SW2`, `SW3`) includes a dedicated 10 kΩ resistor (`R3`, `R2`, `R1`) and a 100 nF decoupling/debounce capacitor to `GND` (`C3`, `C2`, `C1`), forming an RC low-pass filter ($\tau = R \cdot C = 10\,\text{k}\Omega \times 100\,\text{nF} = 1\,\text{ms}$).
-  2. Mechanical contact bounce and coupled 50 Hz / relay transient spikes on sensor wires are attenuated before reaching `U1` GPIO pins (Pins 6, 7, 8).
+  2. Mechanical reed contact bounce and coupled 50 Hz / relay transient spikes on sensor leads are attenuated before reaching `U1` GPIO pins (Pins 6, 7, 8).
 
 ### Verification & Test Documentation (`TC-HW-05`)
 - **Test Analysis (Requirement Analysis):**

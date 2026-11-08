@@ -85,31 +85,31 @@
 
 ---
 
-## `REQ-SAF-04` — Sensor Fault & Dry-Boil Automatic Cutoff
+## `REQ-SAF-04` — Hardware Interlock & Sensor Safety Cutoff (Reed Sensors & Future Temp Probes)
 
 - **Category:** Safety (`SAF`)
 - **Priority:** Must-Have
 - **Status:** Planned
 - **Description:**  
-  The firmware safety supervisor shall continuously validate sensor readings before and during heating. If a temperature sensor reads out-of-bounds (open-circuit or short-circuit) or if boiler temperature rises past the dry-boil threshold, the heaters (`K1`, `K2`) shall be de-energized immediately.
+  The firmware safety supervisor shall continuously validate all active sensor interlocks before and during heating. If any required reed switch interlock opens (water tank empty per `REQ-SEN-02`, carafe missing per `REQ-SEN-03`, or filter support/bucket open per `REQ-SEN-04`), or—once the future temperature sensors (`REQ-SEN-01`) are installed—if a temperature probe faults or exceeds the dry-boil limit, the primary boiler heater (`K1`) shall be de-energized immediately.
 - **Acceptance Criteria:**
-  1. Open-circuit (disconnected probe) or short-circuit sensor fault is detected within <= 1.0 second and immediately forces `K1` and `K2` OFF.
-  2. Dry-boil temperature spike (boiler temperature exceeding 108°C or rapid dT/dt inflection indicating water exhaustion) transitions the state machine from `BREWING` to `KEEP_WARM` or `FAULT_OFF`.
-  3. Fault state is visually indicated on the local status LEDs (`D3`, `D4`) and cannot be cleared without user acknowledgment or fault resolution.
+  1. **Pre-Brew Interlock:** Boiler heater `K1` is strictly inhibited from turning ON unless all three reed sensors confirm safe physical state (`WATER_OK`, `CARAFE_PRESENT`, and `FILTER_CLOSED`).
+  2. **Mid-Brew Cutoff:** Opening the filter support/bucket (`REQ-SEN-04`) or exhausting water (`REQ-SEN-02`) immediately cuts power to `K1`; removing the carafe (`REQ-SEN-03`) pauses `K1` if not returned within the safe drip-stop window.
+  3. **Future Temperature Probe Cutoff (`REQ-SEN-01`):** When temperature sensors are enabled in a later revision, open/short thermistor faults or temperatures > 108°C force `K1` and `K2` OFF within <= 1.0 second.
+  4. Fault or interlock-trip state is visually indicated on the local status LEDs (`D3`, `D4`).
 
 ### Verification & Test Documentation (`TC-SAF-04`)
 - **Test Analysis (Requirement Analysis):**
-  - *Testability:* Sensor inputs can be stimulated with fixed precision resistors or open/short jumpers to deterministic fault thresholds.
-  - *Boundary Conditions:* Sensor unplugged mid-brew; sensor shorted to `GND` or `VCC`; boiler running dry.
+  - *Testability:* Reed sensor inputs (`SW1`–`SW3`) can be toggled open/closed on the bench to verify pre-brew blocking and mid-brew cutoff response times. Future temperature fault thresholds can be verified via unit test mocks and resistor substitution when populated.
+  - *Boundary Conditions:* Filter bucket opened mid-brew; water float dropping empty; carafe removed mid-brew.
 - **Test Description:**
-  1. Initiate `BREWING` state (`K1` energized).
-  2. Disconnect the boiler temperature sensor lead (open circuit) and measure time until `K1` de-energizes.
-  3. Short the boiler temperature sensor input to `GND` and verify `K1` remains de-energized and `D3`/`D4` display the fault pattern.
-  4. Simulate a temperature ramp exceeding 108°C using a decade resistance box or sensor emulator.
-  5. *Pass Criteria:* Heater relay `K1` opens within <= 1.0 second in all fault scenarios; system enters safe lockout.
+  1. Test each reed interlock (`SW1`, `SW2`, `SW3`) in the OPEN (unsafe) state prior to brewing -> verify `K1` cannot be energized by button, BLE, automation, or remote server wake-up.
+  2. Initiate `BREWING` state (`K1` energized with all 3 reed switches closed), then open the filter bucket reed switch -> measure time until `K1` opens.
+  3. Repeat mid-brew opening for the water tank reed switch and carafe reed switch.
+  4. *Pass Criteria:* Heater relay `K1` is 100% blocked when any reed interlock is unsafe and de-energizes within spec when tripped mid-brew.
 - **Test Implementation (Hardware & Software):**
-  - **Tools:** Decade Resistance Box, Jumper Wires (Open/Short fault injection), Logic Analyzer, C/C++ Unit Tests for `safety_supervisor` module.
-  - **Execution:** Unit test `SafetySupervisor::evaluateSensors()` with boundary ADC/sensor values (`0`, `MAX_ADC`, `NaN`, `>108°C`) and verify hardware cutoff on the bench.
+  - **Tools:** Jumper switches / Reed magnets on `SW1`–`SW3`, Logic Analyzer, C/C++ Unit Tests for `safety_supervisor` module.
+  - **Execution:** Unit test `SafetySupervisor::evaluateInterlocks()` across all $2^3 = 8$ reed switch combinations (plus future temperature fault states) and verify hardware relay cutoff on the bench.
 
 ---
 
