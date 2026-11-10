@@ -18,12 +18,12 @@
 
 ### Verification & Test Documentation (`TC-SAF-01`)
 - **Test Analysis (Requirement Analysis):**
-  - *Testability:* Physical PCB layout geometry, inline wiring continuity, and isolation resistance between HV and LV domains can be measured directly without energizing the MCU.
+  - *Testability:* Physical PCB layout geometry, inline wiring continuity, and isolation resistance between HV and LV domains can be measured directly without energizing the Micro Controller Unit.
   - *Risks & Boundary Conditions:* Moisture condensation inside the lower brewer housing reducing surface creepage; thermal runaway if both relay contacts weld shut.
 - **Test Description:**
   1. Inspect DRC (Design Rule Check) clearance rules in `coffeenator.kicad_pcb` between AC mains nets and `GND`/`VCC` nets.
   2. Measure continuity of the factory inline thermal fuses in series with the heater phase line.
-  3. Apply a 500V/1000V DC insulation resistance test (megohmmeter) between shorted AC mains input terminals (L+N) and low-voltage `GND`.
+  3. Apply a 500V/1000V DC insulation resistance test between shorted AC mains input terminals (L+N) and low-voltage `GND`.
   4. *Pass Criteria:* Creepage >= 6.0 mm everywhere; thermal fuses in series (< 0.2 Ω); insulation resistance >= 100 MΩ.
 - **Test Implementation (Hardware):**
   - **Tools:** KiCad DRC Clearance Report, Digital Multimeter (4-wire resistance), Insulation Tester (500V/1000V DC Megger).
@@ -48,7 +48,7 @@
   - *Testability:* ESP32-C3 GPIOs default to input/pull-up or high-Z during reset and bootloader execution. The hardware pull-down network (`R5`/`R8` and `R6`/`R9`) must keep `V_BE` of `Q1` and `Q3` well below the ~0.6V BJT turn-on threshold during reset.
   - *Boundary Conditions:* Power-on ramp (0V to 5V), MCU held in `RST`, and sudden 5V brownout.
 - **Test Description:**
-  1. Power the board with 12V/5V DC while holding `U1` (`ESP32-C3-DevKitM-1`) in hardware reset (`RST` tied to `GND`), or remove `U1` from its socket.
+  1. Power the board with 12V/5V DC while holding `U1` (`ESP32-C3-DevKitM-1`) in hardware reset (`RST` tied to `GND`).
   2. Measure base voltages `V_B(Q1)` and `V_B(Q3)` and check continuity across `K1` and `K2` NO-COM contacts.
   3. Leave `U1` control pins floating and apply a 3.3V transient via a weak 47 kΩ pull-up (simulating internal weak pull-up during boot) to verify if the 10 kΩ pull-down holds the relay off or if pin selection avoids boot-strapping pull-ups.
   4. *Pass Criteria:* `K1` and `K2` remain strictly OPEN during power-up, reset hold, and MCU removal.
@@ -58,13 +58,13 @@
 
 ---
 
-## `REQ-SAF-03` — Degraded Mode / Offline Appliance Fallback ("ABS Principle")
+## `REQ-SAF-03` — Degraded Mode / Offline Appliance Fallback
 
 - **Category:** Safety (`SAF`)
 - **Priority:** Must-Have
 - **Status:** Planned
 - **Description:**  
-  Just like a car whose Anti-lock Braking System (ABS) fails—where the ABS warning indicator illuminates, but the mechanical hydraulic brakes and engine continue to operate safely—the coffee machine shall operate reliably as a basic, safe domestic coffee appliance if Wi-Fi connectivity is lost, the remote server is unreachable, BLE is disconnected, or the configuration file is missing/corrupted.
+  Just like a car where an electronic driver assistance fails then having a warning indicator illuminated, but the mechanical hydraulic systems continue to operate safely, the coffee machine shall operate reliably as a basic, safe domestic coffee appliance if Wi-Fi connectivity is lost, the remote server is unreachable, BLE is disconnected, or the configuration file is missing/corrupted.
 - **Acceptance Criteria:**
   1. Any failure in the network stack (Wi-Fi disconnect, DHCP failure, DNS/API timeout, BLE stack error) is strictly isolated from the core brewing and safety task/loop.
   2. Physical button inputs (`SW1`–`SW3`) and hardware safety timers remain 100% responsive (< 100 ms latency) regardless of wireless connection state or retry loops.
