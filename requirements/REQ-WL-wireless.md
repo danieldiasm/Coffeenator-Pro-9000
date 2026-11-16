@@ -2,6 +2,7 @@
 
 > **Scope:** Covers Bluetooth Low Energy (BLE) provisioning and standalone BLE control, Wi-Fi connectivity, protocol-agnostic remote server wake-up, and safe OTA firmware updates on the `ESP32-C3` (`U1`).
 
+Review Status: To be reviewed
 ---
 
 ## `REQ-WL-01` — Automatic BLE Provisioning & Standalone BLE Operation

@@ -2,6 +2,7 @@
 
 > **Scope:** Covers local appliance behavior, physical button controls, hardware button-combination factory reset, one-off in-memory brew automations, and the core brewing state machine.
 
+Review Status: To be reviewed
 ---
 
 ## `REQ-FW-01` — Offline-First Physical Controls & Standalone Appliance Operation

@@ -2,6 +2,7 @@
 
 > **Core Philosophy:** The Coffeenator Pro 9000 respects user privacy and ownership completely. It shall never capture hidden telemetry or phone home to hardcoded third-party servers, shall never store or transmit personal identifiable information (PII), and shall allow the user to point all API data exchanges to either a public service or their own private/self-hosted server.
 
+Review Status: To be reviewed
 ---
 
 ## `REQ-PRV-01` — Zero Hidden Telemetry & Explicit API-Only Data Capture

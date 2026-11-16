@@ -2,6 +2,7 @@
 
 > **Core Philosophy:** The Coffeenator Pro 9000 switches high-power 230V AC heating elements (~1100W–1400W). Above all else, the machine must be electrically and thermally safe, default to a de-energized state on any hardware or software fault, and continue to operate safely as a standard manual coffee maker if any smart/wireless subsystem fails.
 
+Review Status: Reviewing
 ---
 
 ## `REQ-SAF-01` — Galvanic Isolation & Thermal Fuse Retention
