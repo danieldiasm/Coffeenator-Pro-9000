@@ -2,6 +2,7 @@
 
 > **Hardware Baseline:** Derived from the existing project specifications and the KiCad mainboard design in [`hardware/main-board/coffeenator.kicad_sch`](../hardware/main-board/coffeenator.kicad_sch) and [`hardware/main-board/coffeenator.kicad_pcb`](../hardware/main-board/coffeenator.kicad_pcb).
 
+Review Status: Reviewing
 ---
 
 ## `REQ-HW-01` — Custom Replacement Control Board in OEM Footprint

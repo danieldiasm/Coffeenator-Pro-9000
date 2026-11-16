@@ -2,6 +2,7 @@
 
 > **Core Philosophy:** Every hardware and software component of the Coffeenator Pro 9000 shall be designed as a self-contained, modular, and independently testable unit, backed by formal three-stage verification documentation (**Test Analysis**, **Test Description**, and **Test Implementation**).
 
+Review Status: To be reviewed
 ---
 
 ## `REQ-QA-01` — Modular & Independently Testable Hardware Subsystems

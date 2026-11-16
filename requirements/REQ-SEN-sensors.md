@@ -2,6 +2,7 @@
 
 > **Scope:** Covers the three magnetic reed switch detection channels (`SW1`, `SW2`, `SW3` on [`coffeenator.kicad_sch`](../hardware/main-board/coffeenator.kicad_sch)) for water level, carafe presence, and filter support/bucket closure, as well as future-planned boiler/hotplate temperature telemetry.
 
+Review Status: To be reviewed
 ---
 
 ## `REQ-SEN-01` — Boiler & Hotplate Temperature Telemetry (Future Expansion)
