@@ -24,9 +24,9 @@ REQ - <CAT> - <NN>
 | Code | Category Name | Scope & Focus | Document File |
 | :--- | :--- | :--- | :--- |
 | **`SAF`** | **Safety & Fail-Safe** | Galvanic isolation, thermal fuses, default-OFF states, degraded mode fallback | [`REQ-SAF-safety.md`](./REQ-SAF-safety.md) |
-| **`HW`** | **Hardware & Electrical** | PCB footprint, power supply (`U2`, `U3`), MCU (`U1`) & OTA flash, relay stages (`K1`, `K2`), inputs (`SW1`–`SW3`) | [`REQ-HW-hardware.md`](./REQ-HW-hardware.md) |
-| **`SEN`** | **Sensors & Detection** | Reed sensors for water tank, carafe & filter support/bucket (`SW1`–`SW3`), plus future boiler/hotplate temperature | [`REQ-SEN-sensors.md`](./REQ-SEN-sensors.md) |
-| **`FW`** | **Firmware & Controls** | Offline-first brewing, button-combo factory reset, one-off automations, FSM, OTA self-test & multi-key signature check | [`REQ-FW-firmware.md`](./REQ-FW-firmware.md) |
+| **`HW`** | **Hardware & Electrical** | PCB footprint, power supply (`U2`, `U3`), MCU (`U1`) & OTA flash, relay stages (`K1`, `K2`), reed inputs (`SW1`–`SW3`), pushbuttons (`SW4`–`SW5`), LEDs (`D3`–`D8`) | [`REQ-HW-hardware.md`](./REQ-HW-hardware.md) |
+| **`SEN`** | **Sensors & Detection** | PT1000 temperature dividers (`TH1`, `TH2`, `R11`, `R12`) and reed sensors for water tank, carafe & filter hopper (`SW1`–`SW3`) | [`REQ-SEN-sensors.md`](./REQ-SEN-sensors.md) |
+| **`FW`** | **Firmware & Controls** | Offline-first brewing (`SW4`/`SW5`), button-combo factory reset, one-off automations, FSM, OTA self-test & multi-key signature check | [`REQ-FW-firmware.md`](./REQ-FW-firmware.md) |
 | **`WL`** | **Wireless & Connectivity** | BLE provisioning, standalone BLE mode, Wi-Fi connect, server wake-up, multi-channel OTA (BLE / Wi-Fi / Product Page) | [`REQ-WL-wireless.md`](./REQ-WL-wireless.md) |
 | **`PRV`** | **Privacy & Telemetry** | Zero hidden telemetry, configurable public/private API, no PII (Machine ID / MAC only), BYOK / Dual-Key OTA ownership | [`REQ-PRV-privacy.md`](./REQ-PRV-privacy.md) |
 | **`QA`** | **Modularity & Testing** | HW/SW modular design, Test Analysis, Test Description, and Test Implementation rules | [`REQ-QA-modularity-and-testing.md`](./REQ-QA-modularity-and-testing.md) |
@@ -69,27 +69,28 @@ Each test case **must** document three mandatory artifacts:
 | **`REQ-SAF-01`** | Galvanic Isolation & Thermal Fuse Retention | Must-Have | Existing + HW |
 | **`REQ-SAF-02`** | Fail-Safe Default-OFF Heater Switching Stage | Must-Have | Existing + KiCad (`K1`, `K2`, `R8`, `R9`) |
 | **`REQ-SAF-03`** | Degraded Mode / Offline Appliance Fallback | Must-Have | User Spec |
-| **`REQ-SAF-04`** | Hardware Interlock & Sensor Safety Cutoff (Reed Sensors & Future Temp Probes) | Must-Have | Existing + KiCad (`SW1`–`SW3`) |
+| **`REQ-SAF-04`** | Hardware Interlock & Sensor Safety Cutoff (Reed Sensors `SW1`–`SW3` & PT1000 Probes `TH1`–`TH2`) | Must-Have | Existing + KiCad (`SW1`–`SW3`, `TH1`–`TH2`) |
 | **`REQ-SAF-05`** | Independent Maximum Brew & Keep-Warm Watchdog Timer | Must-Have | Existing |
 
 ### 🔌 Hardware & Electrical (`REQ-HW-*`)
 | Code | Title | Priority | Source |
 | :--- | :--- | :--- | :--- |
 | **`REQ-HW-01`** | Custom Replacement Control Board in OEM Footprint | Must-Have | Existing |
-| **`REQ-HW-02`** | Dual-Stage Regulated Low-Voltage Power Supply (12V & 5V/VCC) | Must-Have | KiCad (`U3` AK-L1-025, `U2` Pololu 4085) |
-| **`REQ-HW-03`** | ESP32-C3 Wireless Microcontroller Core | Must-Have | KiCad (`U1` ESP32-C3-DevKitM-1) |
+| **`REQ-HW-02`** | Multi-Rail Regulated Low-Voltage Power Supply (12V, 5V `VCC` & `3.3V` Logic) | Must-Have | KiCad (`U3` AK-L1-025, `U2` Pololu 4085, `U1` 3V3) |
+| **`REQ-HW-03`** | ESP32-C3 Wireless Microcontroller Core & Pin Allocation (`U1`) | Must-Have | KiCad (`U1` ESP32-C3U / ESP32-C3-DevKitM-1) |
 | **`REQ-HW-04`** | Dual Relay Power Drive Stage with Flyback Suppression | Must-Have | KiCad (`K1`, `K2`, `Q1`, `Q3`, `D1`, `D2`, `C4`, `C5`) |
-| **`REQ-HW-05`** | Hardware-Filtered Switch & Reed Sensor Inputs | Must-Have | KiCad (`SW1`–`SW3`, `R1`–`R3`, `C1`–`C3`) |
-| **`REQ-HW-06`** | Local Visual Status Indicator Driver Stage | Should-Have | KiCad (`Q2`, `D3`, `D4`, `R4`, `R7`, `R10`) |
+| **`REQ-HW-05`** | Hardware-Filtered Magnetic Reed Sensor Inputs (`SW1`–`SW3`) | Must-Have | KiCad (`SW1`–`SW3`, `R1`–`R3`, `C1`–`C3`) |
+| **`REQ-HW-06`** | Three-Channel Visual LED Indicator & Reservoir Illumination System (`D3`–`D8`) | Should-Have | KiCad (`Q2`, `D3`/`D4` on `IO8`; `D8`/`R14` on `IO10`; Diode-OR `D5`/`D6`/`R13`/`D7`) |
 | **`REQ-HW-07`** | MCU Flash Capacity & Dual-Partition OTA Hardware Support | Must-Have | User Spec + KiCad (`U1` ESP32-C3) |
+| **`REQ-HW-08`** | Tactile User Pushbutton Interface (`SW4` Power Toggle & `SW5` Mode Toggle) | Must-Have | KiCad (`SW4`, `SW5`, `R15`, `R16` on `IO20`/`IO21`) |
 
 ### 🌡️ Sensors & Detection (`REQ-SEN-*`)
 | Code | Title | Priority | Source |
 | :--- | :--- | :--- | :--- |
-| **`REQ-SEN-01`** | Boiler & Hotplate Temperature Telemetry *(Future Implementation — Sensors Purchased)* | Nice-to-Have | Future Upgrade |
-| **`REQ-SEN-02`** | Water Tank Level Detection (`SW_Reed`) | Should-Have | Existing + KiCad (`SW_Reed`) |
-| **`REQ-SEN-03`** | Carafe Presence Detection (`SW_Reed`) | Should-Have | Existing + KiCad (`SW_Reed`) |
-| **`REQ-SEN-04`** | Filter Support / Filter Bucket Presence & Closure Detection (`SW_Reed`) | Should-Have | User Spec + KiCad (`SW_Reed`) |
+| **`REQ-SEN-01`** | Boiler & Hot-Plate PT1000 Temperature Telemetry (`TH1`, `TH2`) | Should-Have | KiCad (`TH1`, `TH2` PT1000 + `R11`, `R12` 1 kΩ on `IO0`/`IO1`) |
+| **`REQ-SEN-02`** | Water Tank Level Detection & Reservoir Illumination Trigger (`SW3`) | Should-Have | Existing + KiCad (`SW3` `SW_Reed` on `IO5` -> `D3`/`D4` on `IO8`) |
+| **`REQ-SEN-03`** | Carafe Presence Detection (`SW2`) | Should-Have | Existing + KiCad (`SW2` `SW_Reed` on `IO4`) |
+| **`REQ-SEN-04`** | Filter Hopper / Filter Bucket Presence & Closure Detection (`SW1`) | Should-Have | User Spec + KiCad (`SW1` `SW_Reed` on `IO3`) |
 
 ### ⚙️ Firmware & Local Operation (`REQ-FW-*`)
 | Code | Title | Priority | Source |

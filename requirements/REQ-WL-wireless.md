@@ -135,7 +135,7 @@ Review Status: To be reviewed
   - *Testability:* OTA safety guard conditions depend on `BrewFSM::getCurrentState()`. Corrupt image rejection and mid-transfer power loss recovery can be tested deterministically by flipping bytes in a `.bin` file and cutting power at 50% progress.
 - **Test Description:**
   1. Put the machine into `BREWING` state and attempt an OTA upload via BLE, Wi-Fi, and Remote Server -> verify all three are rejected with `BUSY_HEATING` and brewing continues uninterrupted.
-  2. Start an OTA upload in `IDLE` and press the physical Brew button (`SW1`) at 40% progress -> verify heaters `K1`/`K2` remain strictly OFF during the update.
+  2. Start an OTA upload in `IDLE` and press the physical Power Toggle button (`SW4`) at 40% progress -> verify heaters `K1`/`K2` remain strictly OFF during the update.
   3. Upload a truncated or byte-corrupted `.bin` file -> verify `OtaManager` rejects the image before reboot and remains on the current firmware.
   4. Cut power halfway through an OTA upload -> verify the device boots cleanly into the existing intact partition.
   5. *Pass Criteria:* Zero OTA updates permitted while heating; zero heater activations permitted during OTA; 100% safe recovery from corrupted or interrupted transfers.

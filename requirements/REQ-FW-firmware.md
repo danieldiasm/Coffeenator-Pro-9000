@@ -11,22 +11,25 @@ Review Status: To be reviewed
 - **Priority:** Must-Have
 - **Status:** Planned
 - **Description:**  
-  Anyone in the kitchen shall be able to operate the coffee machine as a simple, standalone domestic appliance using its physical controls (`SW1`–`SW3`) and status LEDs (`D3`, `D4`) even if no wireless configuration exists, BLE is idle, or the Wi-Fi network / remote server has failed.
+  Anyone in the kitchen shall be able to operate the coffee machine as a simple, standalone domestic appliance using its dedicated tactile pushbuttons (`SW4` Power Toggle on `IO20`, `SW5` Mode Toggle on `IO21`) and visual LED indicators (`D8` Status Information LED on `IO10`, `D3`/`D4` Reservoir Illumination LEDs via `Q2` on `IO8`, and `D7` Boiler/Hot-Plate Diode-OR Indicator LED via `D5`/`D6`) even if no wireless configuration exists, BLE is idle, or the Wi-Fi network / remote server has failed.
 - **Acceptance Criteria:**
-  1. Cold boot-to-ready time for physical button polling and safety supervision is under 1.5 seconds (must not wait for Wi-Fi association or BLE connection before enabling manual brewing).
-  2. A single physical button press starts or cancels a brew cycle immediately (< 100 ms response time).
-  3. Local LEDs (`D3`, `D4` driven via `Q2`) clearly communicate `IDLE`, `BREWING`, `KEEP_WARM`, `BLE_UNCONFIGURED`, and `FAULT` states without requiring a smartphone or web browser.
+  1. Cold boot-to-ready time for physical pushbutton polling (`SW4`, `SW5`) and reed/temperature safety supervision (`SW1`–`SW3`, `TH1`–`TH2`) is under 1.5 seconds (must not wait for Wi-Fi association or BLE connection before enabling manual brewing).
+  2. Pressing the Power Toggle pushbutton (`SW4` on `U1` Pin 28 / `IO20`) starts or cancels a brew cycle immediately (< 100 ms response time), while the Mode Toggle pushbutton (`SW5` on `U1` Pin 29 / `IO21`) toggles operational modes (e.g., standard brew / bloom / keep-warm mode).
+  3. Local LEDs clearly communicate machine status without requiring a smartphone or web browser:
+     - **Reservoir LEDs (`D3`, `D4` on `IO8` via `Q2`):** Illuminate when water is detected in the reservoir (`SW3`).
+     - **Status Information LED (`D8` on `IO10` via `R14`):** Communicates `IDLE`, `BREWING`, `KEEP_WARM`, `BLE_UNCONFIGURED`, mode selection, and `FAULT` blink codes.
+     - **Boiler/Hot-Plate Indicator LED (`D7` via Diode-OR gate `D5`/`D6`/`R13`):** Automatically illuminates in hardware whenever either `K1` (Main Boiler) or `K2` (Hot-Plate) relay is active.
 
 ### Verification & Test Documentation (`TC-FW-01`)
 - **Test Analysis (Requirement Analysis):**
-  - *Testability:* Boot-to-ready time is measurable from `VCC` power-good to the first GPIO poll / LED ready signal; offline button actuation is testable with RF completely disabled or unconfigured.
+  - *Testability:* Boot-to-ready time is measurable from `VCC` power-good to the first GPIO poll / `D8` LED ready signal; offline button actuation (`SW4`, `SW5`) is testable with RF completely disabled or unconfigured.
 - **Test Description:**
   1. Erase all Wi-Fi configuration so the device is in a blank state.
-  2. Apply power to the board and press the physical Start button at $t = 1.5\,\text{s}$ after power-on.
-  3. Press the physical Cancel button during active brewing.
-  4. *Pass Criteria:* Brew starts at $t \le 1.5\,\text{s}$ on button press (`K1` energizes, `D3`/`D4` indicate brewing); second press immediately cancels brew (`K1` de-energizes).
+  2. Apply power to the board and press the physical Power Toggle button (`SW4`) at $t = 1.5\,\text{s}$ after power-on.
+  3. Press `SW4` again during active brewing to cancel.
+  4. *Pass Criteria:* Brew starts at $t \le 1.5\,\text{s}$ on `SW4` press (`K1` energizes, `D7` illuminates via Diode-OR gate, `D8` indicates brewing); second `SW4` press immediately cancels brew (`K1` and `D7` de-energize).
 - **Test Implementation (Hardware & Software):**
-  - **Tools:** Logic Analyzer (Channel 0: `VCC`, Channel 1: `SW1`, Channel 2: `K1` coil drive, Channel 3: `Q2` LED drive).
+  - **Tools:** Logic Analyzer (Channel 0: `VCC`, Channel 1: `SW4` `IO20`, Channel 2: `K1` `IO6`, Channel 3: `D8` `IO10`, Channel 4: `D3`/`D4` `IO8`).
   - **Execution:** Capture power-on-to-ready timing trace and verify `< 1500 ms` boot readiness.
 
 ---
@@ -37,21 +40,21 @@ Review Status: To be reviewed
 - **Priority:** Must-Have
 - **Status:** Planned
 - **Description:**  
-  It shall be possible to reset the coffee machine using a specific physical button combination/sequence on the machine itself (`SW1`–`SW3`), which erases the configuration file from non-volatile flash memory (NVS / LittleFS), clears any in-memory automations, and reboots the machine into a clean, blank factory state (ready for fresh BLE provisioning per `REQ-WL-01`).
+  It shall be possible to reset the coffee machine using a specific physical pushbutton combination on the machine itself (`SW4` Power Toggle + `SW5` Mode Toggle), which erases the configuration file from non-volatile flash memory (NVS / LittleFS), clears any in-memory automations, and reboots the machine into a clean, blank factory state (ready for fresh BLE provisioning per `REQ-WL-01`).
 - **Acceptance Criteria:**
-  1. A deliberate multi-button chord or long-press sequence (e.g., holding `SW1 + SW2` simultaneously for >= 5.0 seconds, or pressing `SW1` 5 times within 3 seconds while holding `SW2`) triggers the factory reset routine.
-  2. Accidental single button presses or brief bumps (< 5.0 seconds) never trigger a factory reset.
-  3. Executing the reset combination deletes the configuration file (Wi-Fi credentials, custom API endpoints, pairing tokens) from flash memory, flashes a confirmation pattern on LEDs `D3`/`D4`, and restarts `U1` into blank BLE provisioning mode.
-  4. If heaters (`K1`, `K2`) are active when the reset combo is triggered, heaters are immediately de-energized before flash erasure and reboot.
+  1. A deliberate dual-button chord or long-press sequence (e.g., holding `SW4` Power Toggle + `SW5` Mode Toggle simultaneously for >= 5.0 seconds) triggers the factory reset routine.
+  2. Accidental single button presses (`SW4` or `SW5` alone) or brief bumps (< 5.0 seconds) never trigger a factory reset.
+  3. Executing the reset combination deletes the configuration file (Wi-Fi credentials, custom API endpoints, pairing tokens) from flash memory, flashes a confirmation pattern on the Status Information LED (`D8` on `IO10`) and Reservoir LEDs (`D3`/`D4` on `IO8`), and restarts `U1` into blank BLE provisioning mode.
+  4. If heaters (`K1`, `K2`) are active when the reset combo is triggered, heaters are immediately de-energized (turning off `D7`) before flash erasure and reboot.
 
 ### Verification & Test Documentation (`TC-FW-02`)
 - **Test Analysis (Requirement Analysis):**
-  - *Testability:* Flash filesystem contents before and after the button sequence can be inspected via serial diagnostic output or BLE provisioning state advertisement. Boundary hold durations (e.g., 4.0 s vs. 5.5 s) prevent false triggers.
+  - *Testability:* Flash filesystem contents before and after the `SW4 + SW5` sequence can be inspected via serial diagnostic output or BLE provisioning state advertisement. Boundary hold durations (e.g., 4.0 s vs. 5.5 s) prevent false triggers.
 - **Test Description:**
   1. Provision the machine with a valid configuration file in flash (Wi-Fi SSID + custom API endpoint).
-  2. Hold the reset button combination for 3.5 seconds and release -> verify config file is NOT erased.
-  3. Hold the reset button combination for >= 5.0 seconds -> verify LEDs `D3`/`D4` flash the reset confirmation pattern, the config file is deleted from flash, and `U1` reboots into blank BLE configuration mode.
-  4. *Pass Criteria:* Config file is completely removed from flash after >= 5.0 s combo; device advertises BLE provisioning state upon reboot; holding for < 5.0 s leaves config intact.
+  2. Hold `SW4 + SW5` (`IO20 + IO21`) for 3.5 seconds and release -> verify config file is NOT erased.
+  3. Hold `SW4 + SW5` for >= 5.0 seconds -> verify Status LED `D8` flashes the reset confirmation pattern, the config file is deleted from flash, and `U1` reboots into blank BLE configuration mode.
+  4. *Pass Criteria:* Config file is completely removed from flash after >= 5.0 s `SW4 + SW5` chord; device advertises BLE provisioning state upon reboot; holding for < 5.0 s leaves config intact.
 - **Test Implementation (Software & Hardware):**
   - **Tools:** C/C++ Unit Tests for `ButtonComboDetector` and `ConfigManager::factoryReset()`, plus physical test on `U1` (`ESP32-C3-DevKitM-1`).
   - **Execution:** Automated unit tests checking timing thresholds (4900 ms = no reset, 5000 ms = reset) and bench verification of NVS/flash file deletion.

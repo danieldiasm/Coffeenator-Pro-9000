@@ -14,20 +14,22 @@ Review Status: To be reviewed
   All hardware functional blocks on the mainboard (`coffeenator.kicad_sch` / `coffeenator.kicad_pcb`) shall be partitioned into modular, logically separated subsystems so that each block can be populated, powered, probed, and verified independently before full-system integration with 230V AC heaters.
 - **Acceptance Criteria:**
   1. The hardware schematic and PCB are partitioned into distinct, independently verifiable functional blocks:
-     - **Block A — Power Supply Stage:** `U3` (AK-L1-025 12V AC-DC) and `U2` (Pololu 4085 DC-DC step-down to `VCC`).
-     - **Block B — Controller Core:** Socketed/header-mounted `U1` (`ESP32-C3-DevKitM-1`) removable for bench isolation.
-     - **Block C — Relay Power Switching Channels:** Channel 1 (`R5`, `R8`, `Q1`, `D2`, `C4`, `K1`) and Channel 2 (`R6`, `R9`, `Q3`, `D1`, `C5`, `K2`).
-     - **Block D — Hardware-Debounced Input Bank:** Reed/Switch inputs (`SW1`–`SW3`, `R1`–`R3`, `C1`–`C3`).
-     - **Block E — Visual Status Indicator Stage:** Transistor LED buffer (`R7`, `R4`, `Q2`, `R10`, `D3`, `D4`).
-  2. Because `U1` (`ESP32-C3-DevKitM-1`) is a modular development board on headers, all analog/digital peripheral blocks (Blocks A, C, D, E) can be stimulated and verified on the bare PCB using jumper leads prior to inserting `U1`.
+     - **Block A — Power Supply Stage:** `U3` (AK-L1-025 12V AC-DC) and `U2` (Pololu 4085 DC-DC step-down to 5V `VCC`), plus `3.3V` logic reference rail from `U1` Pin 2 (`3V3`).
+     - **Block B — Controller Core:** Socketed/header-mounted `U1` (`ESP32-C3-DevKitM-1` / `ESP32-C3U`) removable for bench isolation.
+     - **Block C — Relay Power Switching Channels & Diode-OR Indicator:** Main Boiler Channel (`R5`, `R8`, `Q1`, `D2`, `C4`, `K1` on `IO6`), Hot-Plate Channel (`R6`, `R9`, `Q3`, `D1`, `C5`, `K2` on `IO7`), and Hardware Diode-OR Relay Activity LED (`D5`, `D6`, `R13`, `D7`).
+     - **Block D — Hardware-Debounced Reed Sensor Bank:** Reed inputs (`SW1` Filter Hopper on `IO3`, `SW2` Carafe on `IO4`, `SW3` Water Reservoir on `IO5` with `R1`–`R3` 10 kΩ to `3.3V` and `C1`–`C3` 100 nF to `GND`).
+     - **Block E — Tactile User Pushbutton Bank:** Momentary pushbuttons (`SW4` Power Toggle on `IO20`, `SW5` Mode Toggle on `IO21` with `R15`–`R16` 10 kΩ pull-ups to `3.3V`).
+     - **Block F — PT1000 Temperature Divider Bank:** Analog RTD voltage dividers (`TH1` Boiler PT1000 + `R11` 1 kΩ on `IO0`/`ADC1_CH0`; `TH2` Hot-Plate PT1000 + `R12` 1 kΩ on `IO1`/`ADC1_CH1`).
+     - **Block G — MCU Visual Status & Reservoir Illumination Stage:** Reservoir Illumination transistor driver (`R7`, `R4`, `Q2`, `R10`, `D3`, `D4` on `IO8`) and Status Information LED (`R14`, `D8` on `IO10`).
+  2. Because `U1` (`ESP32-C3-DevKitM-1`) is a modular development board on headers, all analog/digital peripheral blocks (Blocks A, C, D, E, F, G) can be stimulated and verified on the bare PCB using jumper leads prior to inserting `U1`.
 
 ### Verification & Test Documentation (`TC-QA-01`)
 - **Test Analysis (Requirement Analysis):**
-  - *Testability:* Removing `U1` from its header sockets exposes every input (`Pins 6, 7, 8`) and output (`Pins 21, 22, 23`) plus `VCC` and `GND`, enabling block-by-block hardware bring-up without firmware dependencies.
+  - *Testability:* Removing `U1` from its header sockets exposes every input (`Pins 5, 9, 10, 20, 21, 28, 29`) and output (`Pins 11, 22, 23, 25`) plus `VCC`, `3.3V`, and `GND`, enabling block-by-block hardware bring-up without firmware dependencies.
 - **Test Description:**
-  1. Populate Block A (`U3`, `U2`) first and verify 12V and `VCC` rails before populating `U1`.
-  2. With `U1` unmounted, apply 3.3V via a current-limited bench lead to socket pins 21, 22, and 23 one at a time -> verify independent actuation of `K1`, `K2`, and LEDs `D3`/`D4`.
-  3. Toggle `SW1`, `SW2`, and `SW3` and measure clean logic transitions at socket pins 6, 7, and 8.
+  1. Populate Block A (`U3`, `U2`) first and verify 12V and 5V `VCC` rails before populating `U1`.
+  2. With `U1` unmounted, apply 3.3V via a current-limited bench lead to socket pins 22 (`IO6`), 23 (`IO7`), 25 (`IO8`), and 11 (`IO10`) one at a time -> verify independent actuation of `K1` (+ `D7`), `K2` (+ `D7`), Reservoir LEDs `D3`/`D4`, and Status LED `D8`.
+  3. Supply `3.3V` to the sensor/button pull-up rail and toggle `SW1`–`SW5` and `TH1`–`TH2` -> measure clean logic transitions and analog divider voltages at socket pins 5, 9, 10, 20, 21, 28, and 29.
   4. *Pass Criteria:* 100% of hardware functional blocks pass standalone electrical bring-up prior to MCU insertion.
 - **Test Implementation (Hardware):**
   - **Tools:** Step-by-step PCB Bring-Up Checklist, Bench Power Supply (3.3V / 5V current-limited), Multimeter.

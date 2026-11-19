@@ -41,7 +41,7 @@ Review Status: Reviewing
   All heater power switching stages (`K1` and `K2`) shall default to the OPEN (de-energized / heaters OFF) state whenever the microcontroller (`U1` ESP32-C3) is in reset, unpowered, booting, brownout, or its GPIO pins are tri-stated (High-Z).
 - **Acceptance Criteria:**
   1. Relay coils (`K1`, `K2`) are wired to the Normally Open (NO) contact path for heater loads so that zero coil current physically disconnects AC power.
-  2. NPN relay driver transistors (`Q1`, `Q3`) include dedicated base-to-GND pull-down resistors (`R8` = 10 kΩ, `R9` = 10 kΩ) to prevent floating-base turn-on when `U1` GPIOs (`Pin 21`/`Pin 22`) are high-impedance.
+  2. NPN relay driver transistors (`Q1`, `Q3`) include dedicated base-to-GND pull-down resistors (`R8` = 10 kΩ, `R9` = 10 kΩ) to prevent floating-base turn-on when `U1` GPIOs (`Pin 22 / IO6` and `Pin 23 / IO7`) are high-impedance, while also keeping the Diode-OR relay indicator (`D5`, `D6`, `R13`, `D7`) de-energized during reset.
   3. Flyback diodes (`D1`, `D2` = `1N4007`) and bulk decoupling capacitors (`C4`, `C5` = `100 µF`) protect the driver transistors and prevent voltage spikes from causing erratic MCU resets during relay release.
 
 ### Verification & Test Documentation (`TC-SAF-02`)
@@ -68,36 +68,36 @@ Review Status: Reviewing
   Just like a car where an electronic driver assistance fails then having a warning indicator illuminated, but the mechanical hydraulic systems continue to operate safely, the coffee machine shall operate reliably as a basic, safe domestic coffee appliance if Wi-Fi connectivity is lost, the remote server is unreachable, BLE is disconnected, or the configuration file is missing/corrupted.
 - **Acceptance Criteria:**
   1. Any failure in the network stack (Wi-Fi disconnect, DHCP failure, DNS/API timeout, BLE stack error) is strictly isolated from the core brewing and safety task/loop.
-  2. Physical button inputs (`SW1`–`SW3`) and hardware safety timers remain 100% responsive (< 100 ms latency) regardless of wireless connection state or retry loops.
-  3. A wireless fault or missing configuration never aborts an active manual brew cycle and never blocks the user from starting or canceling a brew via the physical machine controls.
+  2. Physical pushbutton inputs (`SW4` Power Toggle on `IO20`, `SW5` Mode Toggle on `IO21`), reed sensor interlocks (`SW1`–`SW3`), and hardware safety timers remain 100% responsive (< 100 ms latency) regardless of wireless connection state or retry loops.
+  3. A wireless fault or missing configuration never aborts an active manual brew cycle and never blocks the user from starting or canceling a brew via the physical machine controls (`SW4` / `SW5`).
 
 ### Verification & Test Documentation (`TC-SAF-03`)
 - **Test Analysis (Requirement Analysis):**
   - *Testability:* Network failures often block single-threaded firmware loops if synchronous socket calls are used. By testing physical control latency and brew completion under forced RF/network faults, decoupling is directly verifiable.
   - *Failure Modes:* Access Point powered off mid-brew; API server returning HTTP 500 or hanging TCP connections; corrupted flash config file on boot.
 - **Test Description:**
-  1. Boot the machine with no configuration file in flash and no Wi-Fi router turned on; press the physical Brew button and verify normal brewing and safety cutoffs.
+  1. Boot the machine with no configuration file in flash and no Wi-Fi router turned on; press the physical Power Toggle button (`SW4`) and verify normal brewing and safety cutoffs.
   2. Start a brew while connected to Wi-Fi, then abruptly cut power to the Wi-Fi Access Point mid-brew.
-  3. Configure the API endpoint to a blackhole IP address that drops packets (causing TCP connection timeouts) and test physical Start/Stop button responsiveness.
+  3. Configure the API endpoint to a blackhole IP address that drops packets (causing TCP connection timeouts) and test physical Start/Stop (`SW4`) and Mode Toggle (`SW5`) button responsiveness.
   4. *Pass Criteria:* Brew cycle executes normally in all scenarios; physical button response latency remains <= 100 ms; thermal and dry-boil cutoffs remain active.
 - **Test Implementation (Software & Hardware-in-the-Loop):**
   - **Tools:** Automated firmware integration test suite (mocking network timeout/disconnect states) + Bench HIL test cutting AP power during an active relay cycle.
-  - **Execution:** Measure GPIO latency from `SW1` press to `K1` relay actuation using a logic analyzer while the Wi-Fi subsystem is actively failing reconnection attempts.
+  - **Execution:** Measure GPIO latency from `SW4` press (`U1` Pin 28 / `IO20`) to `K1` relay actuation (`U1` Pin 22 / `IO6`) using a logic analyzer while the Wi-Fi subsystem is actively failing reconnection attempts.
 
 ---
 
-## `REQ-SAF-04` — Hardware Interlock & Sensor Safety Cutoff (Reed Sensors & Future Temp Probes)
+## `REQ-SAF-04` — Hardware Interlock & Sensor Safety Cutoff (Reed Sensors `SW1`–`SW3` & PT1000 Probes `TH1`–`TH2`)
 
 - **Category:** Safety (`SAF`)
 - **Priority:** Must-Have
 - **Status:** Planned
 - **Description:**  
-  The firmware safety supervisor shall continuously validate all active sensor interlocks before and during heating. If any required reed switch interlock opens (water tank empty per `REQ-SEN-02`, carafe missing per `REQ-SEN-03`, or filter support/bucket open per `REQ-SEN-04`), or—once the future temperature sensors (`REQ-SEN-01`) are installed—if a temperature probe faults or exceeds the dry-boil limit, the primary boiler heater (`K1`) shall be de-energized immediately.
+  The firmware safety supervisor shall continuously validate all active sensor interlocks before and during heating. If any required reed switch interlock opens (water tank empty on `SW3` per `REQ-SEN-02`, carafe missing on `SW2` per `REQ-SEN-03`, or filter hopper open on `SW1` per `REQ-SEN-04`), or if a `PT1000` temperature probe (`TH1`, `TH2` per `REQ-SEN-01`) faults or exceeds the dry-boil limit, the primary boiler heater (`K1`) shall be de-energized immediately.
 - **Acceptance Criteria:**
-  1. **Pre-Brew Interlock:** Boiler heater `K1` is strictly inhibited from turning ON unless all three reed sensors confirm safe physical state (`WATER_OK`, `CARAFE_PRESENT`, and `FILTER_CLOSED`).
-  2. **Mid-Brew Cutoff:** Opening the filter support/bucket (`REQ-SEN-04`) or exhausting water (`REQ-SEN-02`) immediately cuts power to `K1`; removing the carafe (`REQ-SEN-03`) pauses `K1` if not returned within the safe drip-stop window.
-  3. **Future Temperature Probe Cutoff (`REQ-SEN-01`):** When temperature sensors are enabled in a later revision, open/short thermistor faults or temperatures > 108°C force `K1` and `K2` OFF within <= 1.0 second.
-  4. Fault or interlock-trip state is visually indicated on the local status LEDs (`D3`, `D4`).
+  1. **Pre-Brew Interlock:** Boiler heater `K1` is strictly inhibited from turning ON unless all three reed sensors confirm safe physical state (`SW3` `WATER_OK`, `SW2` `CARAFE_PRESENT`, and `SW1` `FILTER_CLOSED`).
+  2. **Mid-Brew Cutoff:** Opening the filter hopper/bucket (`SW1`, `REQ-SEN-04`) or exhausting water (`SW3`, `REQ-SEN-02`) immediately cuts power to `K1`; removing the carafe (`SW2`, `REQ-SEN-03`) pauses `K1` if not returned within the safe drip-stop window.
+  3. **PT1000 Temperature Probe Cutoff (`TH1`, `TH2`, `REQ-SEN-01`):** Open/short RTD faults on `IO0`/`IO1` or temperatures > 108°C force `K1` and `K2` OFF within <= 1.0 second.
+  4. Fault or interlock-trip state is visually indicated on the Status Information LED (`D8` via `R14` on `IO10`), while the Reservoir Illumination LEDs (`D3`, `D4` via `Q2` on `IO8`) reflect water tank status and the Diode-OR LED (`D7` via `D5`/`D6`/`R13`) turns OFF immediately when `K1` and `K2` de-energize.
 
 ### Verification & Test Documentation (`TC-SAF-04`)
 - **Test Analysis (Requirement Analysis):**
